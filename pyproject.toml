@@ -13,6 +13,7 @@ dependencies = [
   "uvicorn[standard]",
   "python-jose[cryptography]",
   "cryptography",
+  "python-multipart",
   "pydantic",
   "pydantic-settings",
 ]
