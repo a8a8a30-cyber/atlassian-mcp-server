@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-legal-platform"
+version = "0.1.0"
+description = "Smart, secure, and modular legal operations platform"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "python-jose[cryptography]",
+  "cryptography",
+  "python-multipart",
+  "pydantic",
+  "pydantic-settings",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "httpx",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

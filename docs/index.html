@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Legal Platform - نشر رسمي</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0b1020;
+        color: #f1f5f9;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+      .card {
+        background: #111933;
+        border: 1px solid #243056;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 18px;
+      }
+      h1, h2 {
+        margin-top: 0;
+      }
+      a {
+        color: #60a5fa;
+      }
+      code {
+        background: #1f2a4d;
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+      ul {
+        line-height: 1.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>تم نشر Smart Legal Platform</h1>
+        <p>
+          هذه صفحة النشر الرسمية للمشروع. النسخة الحالية هي <strong>v0.1.0</strong>
+          وتتضمن البحث القانوني الذكي، تحليل العقود، إدارة القضايا، التحليلات، والأمان.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>روابط مهمة</h2>
+        <ul>
+          <li>
+            المستودع: 
+            <a href="https://github.com/a8a8a30-cyber/atlassian-mcp-server" target="_blank">
+              github.com/a8a8a30-cyber/atlassian-mcp-server
+            </a>
+          </li>
+          <li>
+            الإصدار v0.1.0:
+            <a href="https://github.com/a8a8a30-cyber/atlassian-mcp-server/releases/tag/v0.1.0" target="_blank">
+              Release v0.1.0
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>بيانات الدخول التجريبية</h2>
+        <ul>
+          <li>اسم المستخدم: <code>admin</code> — كلمة المرور: <code>Admin@12345</code></li>
+          <li>اسم المستخدم: <code>nora</code> — كلمة المرور: <code>Lawyer@123</code></li>
+          <li>اسم المستخدم: <code>omar</code> — كلمة المرور: <code>Lawyer@123</code></li>
+          <li>اسم المستخدم: <code>layla</code> — كلمة المرور: <code>Para@123</code></li>
+          <li>اسم المستخدم: <code>client1</code> — كلمة المرور: <code>Client@123</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>تشغيل الـ API محليًا</h2>
+        <p>للتجربة الكاملة عبر Swagger:</p>
+        <pre><code>pip install -e ".[dev]"
+uvicorn smart_legal_platform.main:app --reload</code></pre>
+        <p>ثم افتح: <code>http://127.0.0.1:8000/docs</code></p>
+      </div>
+    </div>
+  </body>
+</html>
