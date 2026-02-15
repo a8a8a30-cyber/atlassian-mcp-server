@@ -1,0 +1,1 @@
+# atlassian-mcp-server
