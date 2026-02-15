@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -191,7 +191,7 @@ class SecureMessage(BaseModel):
     subject: str
     encrypted_body: str
     case_id: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class SecureMessageView(BaseModel):
@@ -208,7 +208,7 @@ class ESignatureRequest(BaseModel):
     case_id: str
     signer: str
     document_hash: str = Field(min_length=16)
-    signed_at: datetime = Field(default_factory=datetime.utcnow)
+    signed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ESignatureRecord(BaseModel):
