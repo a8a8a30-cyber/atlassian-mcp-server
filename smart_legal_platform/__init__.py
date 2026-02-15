@@ -1,0 +1,2 @@
+"""Smart Legal Platform package."""
+
