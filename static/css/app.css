@@ -1,0 +1,129 @@
+:root {
+  --app-bg: #f3f5f9;
+  --card-border: #e8ebf2;
+  --brand-primary: #0d6efd;
+  --title-color: #1f2937;
+  --muted-color: #6b7280;
+}
+
+body {
+  font-family: "Cairo", sans-serif;
+  background: var(--app-bg);
+  color: var(--title-color);
+}
+
+.app-navbar {
+  background: linear-gradient(90deg, #111827 0%, #1f2937 100%);
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.2);
+}
+
+.app-navbar .navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.app-navbar .nav-link {
+  border-radius: 8px;
+  color: #d1d5db;
+  margin: 0 2px;
+  padding: 0.4rem 0.7rem;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.page-header {
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.page-header .title {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.page-header .subtitle {
+  color: var(--muted-color);
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+.stat-card {
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.stat-card .label {
+  font-size: 0.85rem;
+  color: var(--muted-color);
+}
+
+.stat-card .value {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.app-card {
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.app-card .card-header {
+  background: #fff;
+  border-bottom: 1px solid var(--card-border);
+  font-weight: 700;
+}
+
+.table thead th {
+  font-size: 0.83rem;
+  color: #4b5563;
+  background: #f8fafc;
+  border-bottom-width: 1px;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.empty-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+  color: #475569;
+}
+
+.action-tile {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.action-tile:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+.action-tile .title {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.action-tile .desc {
+  font-size: 0.88rem;
+  color: #6b7280;
+  margin-bottom: 0;
+}

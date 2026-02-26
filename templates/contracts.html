@@ -1,13 +1,17 @@
 {% extends "base.html" %}
+{% block title %}العقود | إدارة التأجير{% endblock %}
+{% block page_title %}إدارة العقود{% endblock %}
+{% block page_subtitle %}بدء العقود من الحجوزات المؤكدة وإغلاقها عند الاستلام{% endblock %}
 {% block content %}
 <div class="row g-3">
   <div class="col-xl-4">
-    <div class="card shadow-sm">
-      <div class="card-header bg-white">Start Contract</div>
+    <div class="card app-card">
+      <div class="card-header">بدء عقد جديد</div>
       <div class="card-body">
+        {% if reservations %}
         <form method="post">
           <div class="mb-3">
-            <label class="form-label">Reservation</label>
+            <label class="form-label">الحجز</label>
             <select class="form-select" name="reservation_id" required>
               {% for reservation in reservations %}
               <option value="{{ reservation.id }}">
@@ -17,34 +21,40 @@
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Start odometer</label>
+            <label class="form-label">عداد البداية</label>
             <input class="form-control" type="number" min="0" name="start_odometer" required>
           </div>
           <div class="mb-3">
-            <label class="form-label">Fuel out (%)</label>
+            <label class="form-label">نسبة الوقود عند التسليم (%)</label>
             <input class="form-control" type="number" min="0" max="100" value="100" name="fuel_out" required>
           </div>
-          <button class="btn btn-primary w-100" type="submit">Start contract</button>
+          <button class="btn btn-primary w-100" type="submit">بدء العقد</button>
         </form>
+        {% else %}
+        <div class="empty-state">
+          لا توجد حجوزات مؤكدة حالياً. ابدأ أولاً بإضافة حجز من شاشة
+          <a href="{{ url_for('reservations') }}">الحجوزات</a>.
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
   <div class="col-xl-8">
-    <div class="card shadow-sm">
-      <div class="card-header bg-white">Contracts</div>
+    <div class="card app-card">
+      <div class="card-header">سجل العقود</div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-0">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Reservation</th>
-                <th>Vehicle</th>
-                <th>Start</th>
-                <th>Odometer</th>
-                <th>Status</th>
-                <th>Close</th>
+                <th>الرقم</th>
+                <th>الحجز</th>
+                <th>المركبة</th>
+                <th>تاريخ البداية</th>
+                <th>العداد</th>
+                <th>الحالة</th>
+                <th>إغلاق العقد</th>
               </tr>
             </thead>
             <tbody>
@@ -56,25 +66,25 @@
                 <td>{{ contract.start_datetime.strftime("%Y-%m-%d %H:%M") }}</td>
                 <td>{{ contract.start_odometer }}{% if contract.end_odometer is not none %} -> {{ contract.end_odometer }}{% endif %}</td>
                 <td>
-                  <span class="badge {% if contract.status == 'active' %}text-bg-success{% else %}text-bg-secondary{% endif %}">
-                    {{ contract.status }}
+                  <span class="badge {{ status_badge(contract.status) }}">
+                    {{ status_label(contract.status) }}
                   </span>
                 </td>
                 <td>
                   {% if contract.status == "active" %}
                   <form method="post" action="{{ url_for('close_contract', contract_id=contract.id) }}" class="d-flex flex-column gap-1">
-                    <input class="form-control form-control-sm" type="number" min="{{ contract.start_odometer }}" name="end_odometer" placeholder="End odometer" required>
+                    <input class="form-control form-control-sm" type="number" min="{{ contract.start_odometer }}" name="end_odometer" placeholder="عداد الإغلاق" required>
                     <input class="form-control form-control-sm" type="number" min="0" max="100" name="fuel_in" value="100" required>
-                    <input class="form-control form-control-sm" type="text" name="close_notes" placeholder="Close notes">
-                    <button class="btn btn-sm btn-outline-primary">Close</button>
+                    <input class="form-control form-control-sm" type="text" name="close_notes" placeholder="ملاحظات الإغلاق">
+                    <button class="btn btn-sm btn-outline-primary">إغلاق</button>
                   </form>
                   {% else %}
-                  <span class="text-muted">Closed</span>
+                  <span class="text-muted">تم الإغلاق</span>
                   {% endif %}
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="7" class="text-center text-muted py-3">No contracts yet.</td></tr>
+              <tr><td colspan="7" class="text-center text-muted py-3">لا توجد عقود بعد.</td></tr>
               {% endfor %}
             </tbody>
           </table>

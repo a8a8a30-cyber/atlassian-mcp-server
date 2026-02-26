@@ -1,67 +1,133 @@
 {% extends "base.html" %}
+{% block title %}لوحة التحكم | إدارة التأجير{% endblock %}
+{% block page_title %}لوحة التحكم التشغيلية{% endblock %}
+{% block page_subtitle %}متابعة الفروع، المركبات، الحجوزات والعقود بشكل لحظي{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Car Rental Operations Dashboard</h1>
-
-<div class="row g-3 mb-4">
-  <div class="col-md-2">
-    <div class="card shadow-sm">
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
       <div class="card-body">
-        <div class="text-muted small">Branches</div>
-        <div class="h4 mb-0">{{ totals.branches }}</div>
+        <div class="label">إجمالي الفروع</div>
+        <div class="value">{{ totals.branches }}</div>
       </div>
     </div>
   </div>
-  <div class="col-md-2">
-    <div class="card shadow-sm">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
       <div class="card-body">
-        <div class="text-muted small">Vehicles</div>
-        <div class="h4 mb-0">{{ totals.vehicles }}</div>
+        <div class="label">إجمالي المركبات</div>
+        <div class="value">{{ totals.vehicles }}</div>
       </div>
     </div>
   </div>
-  <div class="col-md-2">
-    <div class="card shadow-sm">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
       <div class="card-body">
-        <div class="text-muted small">Available</div>
-        <div class="h4 mb-0">{{ totals.available_vehicles }}</div>
+        <div class="label">المتاحة الآن</div>
+        <div class="value">{{ totals.available_vehicles }}</div>
       </div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
       <div class="card-body">
-        <div class="text-muted small">Active Contracts</div>
-        <div class="h4 mb-0">{{ totals.active_contracts }}</div>
+        <div class="label">العقود النشطة</div>
+        <div class="value">{{ totals.active_contracts }}</div>
       </div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
       <div class="card-body">
-        <div class="text-muted small">Open Reservations</div>
-        <div class="h4 mb-0">{{ totals.open_reservations }}</div>
+        <div class="label">الحجوزات المفتوحة</div>
+        <div class="value">{{ totals.open_reservations }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">نسبة إشغال الأسطول</div>
+        <div class="value">{{ totals.utilization_rate }}%</div>
       </div>
     </div>
   </div>
 </div>
 
+<div class="row g-3 mb-3">
+  <div class="col-lg-8">
+    <div class="card app-card h-100">
+      <div class="card-header">إجراءات سريعة</div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-6 col-xl-3">
+            <a class="action-tile" href="{{ url_for('vehicles') }}">
+              <div class="title">إضافة مركبة</div>
+              <p class="desc">تسجيل مركبة جديدة بالسعر والحالة.</p>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <a class="action-tile" href="{{ url_for('reservations') }}">
+              <div class="title">إنشاء حجز</div>
+              <p class="desc">إدخال بيانات العميل وفترة الإيجار.</p>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <a class="action-tile" href="{{ url_for('contracts') }}">
+              <div class="title">بدء عقد</div>
+              <p class="desc">تحويل الحجز المؤكد إلى عقد نشط.</p>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <a class="action-tile" href="{{ url_for('gps') }}">
+              <div class="title">تحديث GPS</div>
+              <p class="desc">إضافة أحدث موقع وسرعة للمركبة.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card app-card h-100">
+      <div class="card-header">ملخص مالي</div>
+      <div class="card-body">
+        <div class="mb-2 text-muted">إيراد الشهر الحالي</div>
+        <div class="h3 mb-0">{{ monthly_revenue | sar }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if is_empty_workspace %}
+<div class="empty-state mb-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <div class="fw-bold mb-1">النظام جاهز، والآن نبدأ إدخال البيانات</div>
+      <div>تقدر تضيف بياناتك مباشرة، أو تعبئة بيانات تجريبية لمشاهدة كل الشاشات وهي تعمل.</div>
+    </div>
+    <form method="post" action="{{ url_for('setup_demo') }}">
+      <button class="btn btn-primary">تعبئة بيانات تجريبية</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
 <div class="row g-3">
   <div class="col-lg-7">
-    <div class="card shadow-sm">
-      <div class="card-header bg-white">
-        Upcoming Reservations
-      </div>
+    <div class="card app-card">
+      <div class="card-header">أقرب الحجوزات</div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm mb-0">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Customer</th>
-                <th>Vehicle</th>
-                <th>Branch</th>
-                <th>Period</th>
-                <th>Status</th>
+                <th>الرقم</th>
+                <th>العميل</th>
+                <th>المركبة</th>
+                <th>الفرع</th>
+                <th>الفترة</th>
+                <th>الحالة</th>
               </tr>
             </thead>
             <tbody>
@@ -72,10 +138,10 @@
                 <td>{{ reservation.vehicle.plate_number }}</td>
                 <td>{{ reservation.pickup_branch.name }}</td>
                 <td>{{ reservation.start_date }} -> {{ reservation.end_date }}</td>
-                <td><span class="badge text-bg-secondary">{{ reservation.status }}</span></td>
+                <td><span class="badge {{ status_badge(reservation.status) }}">{{ status_label(reservation.status) }}</span></td>
               </tr>
               {% else %}
-              <tr><td colspan="6" class="text-center text-muted py-3">No reservations yet.</td></tr>
+              <tr><td colspan="6" class="text-center text-muted py-3">لا توجد حجوزات حالياً.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -85,19 +151,17 @@
   </div>
 
   <div class="col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-header bg-white">
-        Latest GPS Updates
-      </div>
+    <div class="card app-card">
+      <div class="card-header">آخر تحديثات GPS</div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm mb-0">
             <thead>
               <tr>
-                <th>Vehicle</th>
-                <th>Location</th>
-                <th>Speed</th>
-                <th>Time</th>
+                <th>المركبة</th>
+                <th>الموقع</th>
+                <th>السرعة</th>
+                <th>الوقت</th>
               </tr>
             </thead>
             <tbody>
@@ -105,11 +169,11 @@
               <tr>
                 <td>{{ position.vehicle.plate_number }}</td>
                 <td>{{ position.latitude }}, {{ position.longitude }}</td>
-                <td>{{ "%.0f"|format(position.speed_kmh) }} km/h</td>
+                <td>{{ "%.0f"|format(position.speed_kmh) }} كم/س</td>
                 <td>{{ position.recorded_at.strftime("%Y-%m-%d %H:%M") }}</td>
               </tr>
               {% else %}
-              <tr><td colspan="4" class="text-center text-muted py-3">No GPS data yet.</td></tr>
+              <tr><td colspan="4" class="text-center text-muted py-3">لا توجد بيانات تتبع بعد.</td></tr>
               {% endfor %}
             </tbody>
           </table>

@@ -147,6 +147,17 @@ class CarRentalMvpTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "ok"})
 
+    def test_reports_endpoint(self):
+        response = self.client.get("/reports")
+        self.assertEqual(response.status_code, 200)
+
+    def test_setup_demo_endpoint(self):
+        response = self.client.post("/setup-demo", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        with self.app.app_context():
+            self.assertGreaterEqual(Vehicle.query.count(), 4)
+            self.assertGreaterEqual(Reservation.query.count(), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

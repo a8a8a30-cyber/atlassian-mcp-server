@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}التقارير | إدارة التأجير{% endblock %}
+{% block page_title %}التقارير التشغيلية والمالية{% endblock %}
+{% block page_subtitle %}قراءة سريعة للأداء حسب الفروع والحالة التشغيلية{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">إجمالي الإيراد</div>
+        <div class="value">{{ total_revenue | sar }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">إجمالي الحجوزات</div>
+        <div class="value">{{ reservation_totals.all }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">الحجوزات المفتوحة</div>
+        <div class="value">{{ reservation_totals.open }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">العقود المكتملة</div>
+        <div class="value">{{ reservation_totals.completed }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-5">
+    <div class="card app-card h-100">
+      <div class="card-header">حالة الأسطول</div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <span>إجمالي المركبات</span>
+          <strong>{{ fleet_totals.all }}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>متاحة</span>
+          <strong>{{ fleet_totals.available }}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>مؤجرة</span>
+          <strong>{{ fleet_totals.rented }}</strong>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>صيانة</span>
+          <strong>{{ fleet_totals.maintenance }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card app-card h-100">
+      <div class="card-header">العقود النشطة الآن</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>العقد</th>
+                <th>المركبة</th>
+                <th>العميل</th>
+                <th>تاريخ البداية</th>
+                <th>تاريخ نهاية الحجز</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for contract in active_contracts %}
+              <tr>
+                <td>#{{ contract.id }}</td>
+                <td>{{ contract.vehicle.plate_number }}</td>
+                <td>{{ contract.reservation.customer_name }}</td>
+                <td>{{ contract.start_datetime.strftime("%Y-%m-%d") }}</td>
+                <td>{{ contract.reservation.end_date }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-center text-muted py-3">لا توجد عقود نشطة حالياً.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card app-card">
+  <div class="card-header">أداء الفروع</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>الفرع</th>
+            <th>المدينة</th>
+            <th>المركبات</th>
+            <th>العقود النشطة</th>
+            <th>الإيراد</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in branch_rows %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.city }}</td>
+            <td>{{ row.vehicles }}</td>
+            <td>{{ row.active_contracts }}</td>
+            <td>{{ row.revenue | sar }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-3">لا توجد بيانات فروع بعد.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

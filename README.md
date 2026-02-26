@@ -13,12 +13,15 @@ designed for fast deployment and very low operating cost.
 
 ## Included MVP Features
 
+- Arabic RTL web interface (mobile/tablet friendly)
 - Branch management
 - Fleet management (vehicles, status, daily rates, GPS device ID)
 - Reservation management with overlap validation
 - Contract lifecycle (start/close contract)
-- Basic GPS point logging (manual input for now)
-- Dashboard with operational counters
+- GPS point logging (manual input for now)
+- Dashboard with operational counters and monthly revenue
+- Reports page (fleet, contracts, and branch revenue snapshot)
+- One-click demo data bootstrap from the top navbar
 
 ## Quick Start
 
