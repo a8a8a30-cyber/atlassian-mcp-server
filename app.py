@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -11,13 +11,17 @@ VEHICLE_STATUSES = ("available", "rented", "maintenance")
 OPEN_RESERVATION_STATUSES = ("pending", "confirmed", "active")
 
 
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
 class Branch(db.Model):
     __tablename__ = "branches"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     city = db.Column(db.String(120), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     vehicles = db.relationship("Vehicle", back_populates="branch", lazy=True)
 
@@ -35,7 +39,7 @@ class Vehicle(db.Model):
     odometer = db.Column(db.Integer, default=0, nullable=False)
     gps_identifier = db.Column(db.String(120), nullable=True)
     branch_id = db.Column(db.Integer, db.ForeignKey("branches.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     branch = db.relationship("Branch", back_populates="vehicles")
     reservations = db.relationship("Reservation", back_populates="vehicle", lazy=True)
@@ -56,7 +60,7 @@ class Reservation(db.Model):
     total_price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="confirmed", nullable=False)
     notes = db.Column(db.String(400), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     vehicle = db.relationship("Vehicle", back_populates="reservations")
     pickup_branch = db.relationship("Branch", foreign_keys=[pickup_branch_id])
@@ -75,7 +79,7 @@ class Contract(db.Model):
         nullable=False,
     )
     vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicles.id"), nullable=False)
-    start_datetime = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    start_datetime = db.Column(db.DateTime, default=utc_now, nullable=False)
     end_datetime = db.Column(db.DateTime, nullable=True)
     start_odometer = db.Column(db.Integer, nullable=False)
     end_odometer = db.Column(db.Integer, nullable=True)
@@ -83,7 +87,7 @@ class Contract(db.Model):
     fuel_in = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(20), default="active", nullable=False)
     close_notes = db.Column(db.String(400), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     reservation = db.relationship("Reservation", back_populates="contract")
     vehicle = db.relationship("Vehicle")
@@ -97,7 +101,7 @@ class GpsPosition(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     speed_kmh = db.Column(db.Float, default=0.0, nullable=False)
-    recorded_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    recorded_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     source = db.Column(db.String(40), default="manual", nullable=False)
 
     vehicle = db.relationship("Vehicle", back_populates="gps_positions")
@@ -487,7 +491,7 @@ def create_app(database_uri=None, testing=False):
             flash("Missing linked vehicle or reservation.", "danger")
             return redirect(url_for("contracts"))
 
-        contract.end_datetime = datetime.utcnow()
+        contract.end_datetime = utc_now()
         contract.end_odometer = end_odometer
         contract.fuel_in = fuel_in
         contract.status = "closed"
