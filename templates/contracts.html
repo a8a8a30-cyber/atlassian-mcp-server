@@ -3,6 +3,16 @@
 {% block page_title %}إدارة العقود{% endblock %}
 {% block page_subtitle %}بدء العقود من الحجوزات المؤكدة وإغلاقها عند الاستلام{% endblock %}
 {% block content %}
+{% if gps_backend_enabled %}
+<div class="alert alert-info">
+  ربط GPSDome مفعل. يتم مزامنة العقد تلقائيًا عند البدء والإغلاق إذا كانت المركبة تحتوي على IMEI في حقل GPS ID.
+</div>
+{% else %}
+<div class="alert alert-warning">
+  ربط GPSDome غير مفعل. أضف متغير البيئة <code>GPS_BACKEND_BASE_URL</code> لتشغيل التكامل.
+</div>
+{% endif %}
+
 <div class="row g-3">
   <div class="col-xl-4">
     <div class="card app-card">
@@ -54,6 +64,7 @@
                 <th>تاريخ البداية</th>
                 <th>العداد</th>
                 <th>الحالة</th>
+                <th>تقرير GPS</th>
                 <th>إغلاق العقد</th>
               </tr>
             </thead>
@@ -71,6 +82,18 @@
                   </span>
                 </td>
                 <td>
+                  {% if gps_backend_enabled and contract.vehicle.gps_identifier %}
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('contract_gps_report', contract_id=contract.id) }}">
+                    عرض التقرير
+                  </a>
+                  <div class="small text-muted mt-1">{{ contract.vehicle.gps_identifier }}</div>
+                  {% elif not contract.vehicle.gps_identifier %}
+                  <span class="text-muted">لا يوجد IMEI</span>
+                  {% else %}
+                  <span class="text-muted">غير مفعل</span>
+                  {% endif %}
+                </td>
+                <td>
                   {% if contract.status == "active" %}
                   <form method="post" action="{{ url_for('close_contract', contract_id=contract.id) }}" class="d-flex flex-column gap-1">
                     <input class="form-control form-control-sm" type="number" min="{{ contract.start_odometer }}" name="end_odometer" placeholder="عداد الإغلاق" required>
@@ -84,7 +107,7 @@
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="7" class="text-center text-muted py-3">لا توجد عقود بعد.</td></tr>
+              <tr><td colspan="8" class="text-center text-muted py-3">لا توجد عقود بعد.</td></tr>
               {% endfor %}
             </tbody>
           </table>

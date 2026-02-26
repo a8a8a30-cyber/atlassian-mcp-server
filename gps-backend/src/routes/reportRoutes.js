@@ -13,6 +13,19 @@ function createReportRoutes({ reportsService, syncService, alertsService, contra
   );
 
   router.get(
+    "/contracts/external/:externalContractId",
+    asyncHandler(async (req, res) => {
+      const report = await reportsService.contractReportByExternalId(
+        req.params.externalContractId
+      );
+      if (!report) {
+        return res.status(404).json({ ok: false, error: "Contract not found" });
+      }
+      return res.json({ ok: true, report });
+    })
+  );
+
+  router.get(
     "/contracts/:contractId",
     asyncHandler(async (req, res) => {
       const report = await reportsService.contractReport(Number(req.params.contractId));
@@ -20,6 +33,16 @@ function createReportRoutes({ reportsService, syncService, alertsService, contra
         return res.status(404).json({ ok: false, error: "Contract not found" });
       }
       return res.json({ ok: true, report });
+    })
+  );
+
+  router.get(
+    "/live-positions",
+    asyncHandler(async (req, res) => {
+      const positions = await reportsService.latestPositions({
+        limit: Number(req.query.limit || 100),
+      });
+      return res.json({ ok: true, positions });
     })
   );
 
@@ -35,6 +58,20 @@ function createReportRoutes({ reportsService, syncService, alertsService, contra
     "/contracts/:contractId/distance",
     asyncHandler(async (req, res) => {
       const contract = await contractsService.getContract(Number(req.params.contractId));
+      if (!contract) {
+        return res.status(404).json({ ok: false, error: "Contract not found" });
+      }
+      const result = await syncService.calculateContractDistance(contract.id);
+      return res.json({ ok: true, result });
+    })
+  );
+
+  router.post(
+    "/contracts/external/:externalContractId/distance",
+    asyncHandler(async (req, res) => {
+      const contract = await contractsService.getContractByExternalId(
+        req.params.externalContractId
+      );
       if (!contract) {
         return res.status(404).json({ ok: false, error: "Contract not found" });
       }

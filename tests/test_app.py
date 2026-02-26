@@ -61,6 +61,23 @@ class CarRentalMvpTestCase(unittest.TestCase):
             follow_redirects=True,
         )
 
+    def _start_contract(self):
+        self._create_reservation("2026-03-10", "2026-03-12")
+        with self.app.app_context():
+            reservation = Reservation.query.one()
+        response = self.client.post(
+            "/contracts",
+            data={
+                "reservation_id": str(reservation.id),
+                "start_odometer": "10010",
+                "fuel_out": "95",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        with self.app.app_context():
+            return Contract.query.one()
+
     def test_create_reservation_calculates_price(self):
         response = self._create_reservation("2026-03-01", "2026-03-04")
         self.assertEqual(response.status_code, 200)
@@ -81,26 +98,13 @@ class CarRentalMvpTestCase(unittest.TestCase):
             self.assertEqual(Reservation.query.count(), 1)
 
     def test_close_contract_returns_vehicle_available(self):
-        self._create_reservation("2026-03-10", "2026-03-12")
-        with self.app.app_context():
-            reservation = Reservation.query.one()
-
-        response = self.client.post(
-            "/contracts",
-            data={
-                "reservation_id": str(reservation.id),
-                "start_odometer": "10010",
-                "fuel_out": "95",
-            },
-            follow_redirects=True,
-        )
-        self.assertEqual(response.status_code, 200)
+        contract = self._start_contract()
 
         with self.app.app_context():
-            contract = Contract.query.one()
-            self.assertEqual(contract.status, "active")
+            active_contract = db.session.get(Contract, contract.id)
+            self.assertEqual(active_contract.status, "active")
             vehicle = db.session.get(Vehicle, self.vehicle_id)
-            reservation = db.session.get(Reservation, reservation.id)
+            reservation = db.session.get(Reservation, active_contract.reservation_id)
             self.assertEqual(vehicle.status, "rented")
             self.assertEqual(reservation.status, "active")
 
@@ -157,6 +161,22 @@ class CarRentalMvpTestCase(unittest.TestCase):
         with self.app.app_context():
             self.assertGreaterEqual(Vehicle.query.count(), 4)
             self.assertGreaterEqual(Reservation.query.count(), 2)
+
+    def test_contract_gps_report_page_when_backend_disabled(self):
+        contract = self._start_contract()
+        response = self.client.get(
+            f"/contracts/{contract.id}/gps-report",
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_gps_sync_route_when_backend_disabled(self):
+        response = self.client.post(
+            "/gps/sync",
+            data={"limit": "100", "from_minutes": "15"},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == "__main__":

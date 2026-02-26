@@ -87,6 +87,19 @@ function createContractRoutes({ contractsService, alertsService }) {
   );
 
   router.get(
+    "/external/:externalContractId",
+    asyncHandler(async (req, res) => {
+      const contract = await contractsService.getContractByExternalId(
+        req.params.externalContractId
+      );
+      if (!contract) {
+        return res.status(404).json({ ok: false, error: "Contract not found" });
+      }
+      return res.json({ ok: true, contract });
+    })
+  );
+
+  router.get(
     "/:contractId",
     asyncHandler(async (req, res) => {
       const contract = await contractsService.getContract(Number(req.params.contractId));
@@ -94,6 +107,19 @@ function createContractRoutes({ contractsService, alertsService }) {
         return res.status(404).json({ ok: false, error: "Contract not found" });
       }
       return res.json({ ok: true, contract });
+    })
+  );
+
+  router.patch(
+    "/external/:externalContractId/close",
+    asyncHandler(async (req, res) => {
+      const updated = await contractsService.closeContractByExternalId(
+        req.params.externalContractId
+      );
+      if (!updated) {
+        return res.status(404).json({ ok: false, error: "Contract not found" });
+      }
+      return res.json({ ok: true, contract: updated });
     })
   );
 

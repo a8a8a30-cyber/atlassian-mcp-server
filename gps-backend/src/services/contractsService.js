@@ -122,6 +122,14 @@ class ContractsService {
     return this.getContract(contractId);
   }
 
+  async closeContractByExternalId(externalContractId) {
+    const contract = await this.getContractByExternalId(externalContractId);
+    if (!contract) {
+      return null;
+    }
+    return this.closeContract(contract.id);
+  }
+
   async activeContracts() {
     return this.listContracts({ status: "active" });
   }

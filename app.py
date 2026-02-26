@@ -1,5 +1,9 @@
 import os
+import json
 from datetime import date, datetime, timedelta, timezone
+from urllib import error as urllib_error
+from urllib import parse as urllib_parse
+from urllib import request as urllib_request
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -11,6 +15,7 @@ db = SQLAlchemy()
 VEHICLE_STATUSES = ("available", "rented", "maintenance")
 OPEN_RESERVATION_STATUSES = ("pending", "confirmed", "active")
 REVENUE_STATUSES = ("active", "completed")
+GPS_BACKEND_CONTRACT_PREFIX = "FLASK-CONTRACT"
 
 STATUS_LABELS = {
     "available": "متاحة",
@@ -47,6 +52,325 @@ def status_label(status_code: str) -> str:
 
 def status_badge(status_code: str) -> str:
     return STATUS_BADGES.get(status_code, "text-bg-secondary")
+
+
+def gps_backend_base_url() -> str:
+    return os.getenv("GPS_BACKEND_BASE_URL", "").strip().rstrip("/")
+
+
+def gps_backend_enabled() -> bool:
+    return bool(gps_backend_base_url())
+
+
+def gps_backend_timeout_seconds() -> int:
+    try:
+        return int(os.getenv("GPS_BACKEND_TIMEOUT_SECONDS", "15"))
+    except ValueError:
+        return 15
+
+
+def build_external_contract_id(contract_id: int) -> str:
+    return f"{GPS_BACKEND_CONTRACT_PREFIX}-{contract_id}"
+
+
+def safe_json_loads(raw_value: str):
+    if not raw_value:
+        return {}
+    try:
+        return json.loads(raw_value)
+    except json.JSONDecodeError:
+        return {"raw": raw_value}
+
+
+def call_gps_backend(
+    method: str,
+    path: str,
+    payload: dict | None = None,
+    query_params: dict | None = None,
+):
+    base_url = gps_backend_base_url()
+    if not base_url:
+        return {
+            "ok": False,
+            "status": None,
+            "error": "GPS backend URL is not configured.",
+            "data": None,
+        }
+
+    normalized_path = path if path.startswith("/") else f"/{path}"
+    url = f"{base_url}{normalized_path}"
+    if query_params:
+        filtered = {k: v for k, v in query_params.items() if v is not None}
+        if filtered:
+            url = f"{url}?{urllib_parse.urlencode(filtered)}"
+
+    request_data = None
+    headers = {"Accept": "application/json"}
+    if payload is not None:
+        request_data = json.dumps(payload).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+
+    backend_request = urllib_request.Request(
+        url=url,
+        data=request_data,
+        method=method.upper(),
+        headers=headers,
+    )
+
+    try:
+        with urllib_request.urlopen(
+            backend_request, timeout=gps_backend_timeout_seconds()
+        ) as response:
+            body = response.read().decode("utf-8")
+            return {
+                "ok": True,
+                "status": response.status,
+                "error": None,
+                "data": safe_json_loads(body),
+            }
+    except urllib_error.HTTPError as exc:
+        body = exc.read().decode("utf-8")
+        parsed_body = safe_json_loads(body)
+        message = parsed_body.get("error") if isinstance(parsed_body, dict) else str(exc)
+        return {
+            "ok": False,
+            "status": exc.code,
+            "error": message or f"HTTP error {exc.code}",
+            "data": parsed_body,
+        }
+    except urllib_error.URLError as exc:
+        return {
+            "ok": False,
+            "status": None,
+            "error": f"GPS backend is unreachable: {exc.reason}",
+            "data": None,
+        }
+
+
+def parse_backend_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        normalized = value
+    else:
+        text = str(value).strip()
+        normalized = None
+        parse_formats = (
+            None,
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M:%S.%f",
+        )
+        for parse_format in parse_formats:
+            try:
+                if parse_format is None:
+                    normalized = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                else:
+                    normalized = datetime.strptime(text, parse_format)
+                break
+            except ValueError:
+                continue
+    if normalized is None:
+        return None
+    if normalized.tzinfo is None:
+        return normalized.replace(tzinfo=timezone.utc)
+    return normalized.astimezone(timezone.utc)
+
+
+def sync_contract_to_gps_backend(contract, reservation, vehicle):
+    if not gps_backend_enabled():
+        return {"ok": False, "skipped": True, "message": "GPS backend غير مفعل."}
+
+    imei = (vehicle.gps_identifier or "").strip()
+    if not imei:
+        return {
+            "ok": False,
+            "skipped": True,
+            "message": "لا يوجد IMEI في المركبة، يرجى تعبئة GPS ID.",
+        }
+
+    start_dt = contract.start_datetime or utc_now()
+    if start_dt.tzinfo is None:
+        start_dt = start_dt.replace(tzinfo=timezone.utc)
+    else:
+        start_dt = start_dt.astimezone(timezone.utc)
+
+    expected_end_dt = datetime.combine(
+        reservation.end_date,
+        datetime.max.time().replace(microsecond=0),
+    ).replace(tzinfo=timezone.utc)
+
+    payload = {
+        "externalContractId": build_external_contract_id(contract.id),
+        "customerName": reservation.customer_name,
+        "vehiclePlate": vehicle.plate_number,
+        "deviceImei": imei,
+        "startAt": start_dt.isoformat().replace("+00:00", "Z"),
+        "endAt": expected_end_dt.isoformat().replace("+00:00", "Z"),
+        "speedLimitKmh": int(os.getenv("DEFAULT_SPEED_LIMIT_KMH", "120")),
+        "distanceLimitKm": float(os.getenv("DEFAULT_DISTANCE_LIMIT_KM", "500")),
+    }
+
+    response = call_gps_backend(
+        method="POST",
+        path="/api/integration/rental/contracts",
+        payload=payload,
+    )
+    if response["ok"] and isinstance(response["data"], dict) and response["data"].get("ok"):
+        contract_data = response["data"].get("contract", {})
+        return {
+            "ok": True,
+            "skipped": False,
+            "created": response["data"].get("created", True),
+            "external_contract_id": contract_data.get("externalContractId"),
+        }
+    return {
+        "ok": False,
+        "skipped": False,
+        "message": response.get("error") or "تعذر مزامنة العقد مع GPS backend.",
+    }
+
+
+def close_contract_in_gps_backend(contract_id: int):
+    if not gps_backend_enabled():
+        return {"ok": False, "skipped": True, "message": "GPS backend غير مفعل."}
+
+    external_contract_id = build_external_contract_id(contract_id)
+    encoded_external_id = urllib_parse.quote(external_contract_id, safe="")
+    response = call_gps_backend(
+        method="PATCH",
+        path=f"/api/contracts/external/{encoded_external_id}/close",
+    )
+    if response["ok"] and isinstance(response["data"], dict) and response["data"].get("ok"):
+        return {"ok": True, "skipped": False}
+    return {
+        "ok": False,
+        "skipped": False,
+        "message": response.get("error") or "تعذر إغلاق العقد في GPS backend.",
+    }
+
+
+def sync_live_positions_from_backend(limit=300, from_minutes=20):
+    if not gps_backend_enabled():
+        return {"ok": False, "message": "GPS backend غير مفعل."}
+
+    sync_devices_result = call_gps_backend(method="POST", path="/api/gpsdome/sync/devices")
+    if not sync_devices_result["ok"]:
+        return {
+            "ok": False,
+            "message": f"فشل مزامنة الأجهزة: {sync_devices_result.get('error')}",
+        }
+
+    sync_positions_result = call_gps_backend(
+        method="POST",
+        path="/api/gpsdome/sync/positions",
+        payload={"fromMinutes": from_minutes, "limit": max(int(limit), 200)},
+    )
+    if not sync_positions_result["ok"]:
+        return {
+            "ok": False,
+            "message": f"فشل مزامنة المواقع: {sync_positions_result.get('error')}",
+        }
+
+    live_positions_result = call_gps_backend(
+        method="GET",
+        path="/api/reports/live-positions",
+        query_params={"limit": int(limit)},
+    )
+    if not live_positions_result["ok"]:
+        return {
+            "ok": False,
+            "message": f"فشل جلب المواقع المباشرة: {live_positions_result.get('error')}",
+        }
+
+    payload = live_positions_result.get("data") or {}
+    backend_positions = payload.get("positions", []) if isinstance(payload, dict) else []
+    if not isinstance(backend_positions, list):
+        return {"ok": False, "message": "تنسيق المواقع المستلمة من GPS backend غير صالح."}
+
+    vehicles = Vehicle.query.filter(Vehicle.gps_identifier.isnot(None)).all()
+    vehicles_by_imei = {}
+    for vehicle in vehicles:
+        key = (vehicle.gps_identifier or "").strip()
+        if key:
+            vehicles_by_imei[key] = vehicle
+
+    imported = 0
+    duplicates = 0
+    unmatched = 0
+    ignored = 0
+
+    for item in backend_positions:
+        imei = str(item.get("imei", "")).strip()
+        vehicle = vehicles_by_imei.get(imei)
+        if not vehicle:
+            unmatched += 1
+            continue
+
+        try:
+            latitude = float(item.get("latitude"))
+            longitude = float(item.get("longitude"))
+            speed_kmh = max(float(item.get("speedKmh", 0) or 0), 0.0)
+        except (TypeError, ValueError):
+            ignored += 1
+            continue
+
+        recorded_at = parse_backend_datetime(item.get("positionTime")) or utc_now()
+        existing = GpsPosition.query.filter_by(
+            vehicle_id=vehicle.id,
+            recorded_at=recorded_at,
+        ).first()
+        if existing:
+            duplicates += 1
+            continue
+
+        db.session.add(
+            GpsPosition(
+                vehicle_id=vehicle.id,
+                latitude=latitude,
+                longitude=longitude,
+                speed_kmh=speed_kmh,
+                recorded_at=recorded_at,
+                source="gpsdome",
+            )
+        )
+        imported += 1
+
+    if imported > 0:
+        db.session.commit()
+
+    return {
+        "ok": True,
+        "imported": imported,
+        "duplicates": duplicates,
+        "unmatched": unmatched,
+        "ignored": ignored,
+        "fetched": len(backend_positions),
+    }
+
+
+def load_contract_gps_report(contract_id: int):
+    if not gps_backend_enabled():
+        return {"ok": False, "message": "GPS backend غير مفعل.", "report": None}
+
+    external_contract_id = build_external_contract_id(contract_id)
+    encoded_external_id = urllib_parse.quote(external_contract_id, safe="")
+    response = call_gps_backend(
+        method="GET",
+        path=f"/api/reports/contracts/external/{encoded_external_id}",
+    )
+    if response["ok"] and isinstance(response["data"], dict) and response["data"].get("ok"):
+        return {
+            "ok": True,
+            "message": None,
+            "report": response["data"].get("report"),
+            "external_contract_id": external_contract_id,
+        }
+    return {
+        "ok": False,
+        "message": response.get("error") or "تعذر تحميل تقرير GPS.",
+        "report": None,
+        "external_contract_id": external_contract_id,
+    }
 
 
 def resolve_database_uri(app: Flask, database_uri: str | None = None) -> str:
@@ -354,6 +678,8 @@ def create_app(database_uri=None, testing=False):
         return {
             "status_label": status_label,
             "status_badge": status_badge,
+            "gps_backend_enabled": gps_backend_enabled(),
+            "build_external_contract_id": build_external_contract_id,
             "vehicle_status_options": [
                 (status_code, status_label(status_code))
                 for status_code in VEHICLE_STATUSES
@@ -785,7 +1111,18 @@ def create_app(database_uri=None, testing=False):
             reservation.status = "active"
             db.session.add(contract)
             db.session.commit()
+
+            gps_sync_result = sync_contract_to_gps_backend(contract, reservation, vehicle)
             flash("تم بدء العقد بنجاح.", "success")
+            if gps_sync_result.get("ok"):
+                flash("تمت مزامنة العقد مع GPS backend.", "info")
+            elif not gps_sync_result.get("skipped"):
+                flash(
+                    f"تم بدء العقد محليًا لكن فشل الربط مع GPS backend: {gps_sync_result.get('message')}",
+                    "warning",
+                )
+            else:
+                flash(gps_sync_result.get("message"), "warning")
             return redirect(url_for("contracts"))
 
         eligible_reservations = (
@@ -806,6 +1143,28 @@ def create_app(database_uri=None, testing=False):
             "contracts.html",
             reservations=eligible_reservations,
             contracts=all_contracts,
+        )
+
+    @app.get("/contracts/<int:contract_id>/gps-report")
+    def contract_gps_report(contract_id):
+        contract = db.session.get(Contract, contract_id)
+        if not contract:
+            flash("العقد غير موجود.", "danger")
+            return redirect(url_for("contracts"))
+
+        result = load_contract_gps_report(contract.id)
+        if not result.get("ok"):
+            flash(
+                f"تعذر تحميل تقرير GPS للعقد #{contract.id}: {result.get('message')}",
+                "warning",
+            )
+
+        return render_template(
+            "contract_gps_report.html",
+            contract=contract,
+            report=result.get("report"),
+            integration_error=result.get("message") if not result.get("ok") else None,
+            external_contract_id=result.get("external_contract_id"),
         )
 
     @app.post("/contracts/<int:contract_id>/close")
@@ -852,7 +1211,44 @@ def create_app(database_uri=None, testing=False):
 
         db.session.commit()
         flash("تم إغلاق العقد وإرجاع المركبة إلى متاحة.", "success")
+
+        gps_close_result = close_contract_in_gps_backend(contract.id)
+        if gps_close_result.get("ok"):
+            flash("تم إغلاق العقد في GPS backend.", "info")
+        elif not gps_close_result.get("skipped"):
+            flash(
+                f"تم الإغلاق محليًا لكن فشل إغلاق GPS backend: {gps_close_result.get('message')}",
+                "warning",
+            )
+
         return redirect(url_for("contracts"))
+
+    @app.post("/gps/sync")
+    def sync_gps_from_backend():
+        try:
+            limit = int(request.form.get("limit", "300").strip())
+            from_minutes = int(request.form.get("from_minutes", "20").strip())
+        except ValueError:
+            flash("قيم المزامنة غير صحيحة.", "danger")
+            return redirect(url_for("gps"))
+
+        result = sync_live_positions_from_backend(
+            limit=max(limit, 50),
+            from_minutes=max(from_minutes, 1),
+        )
+        if result.get("ok"):
+            flash(
+                (
+                    "تمت مزامنة GPS بنجاح "
+                    f"(تم الاستيراد: {result['imported']}, "
+                    f"المكررة: {result['duplicates']}, "
+                    f"غير المطابقة: {result['unmatched']})."
+                ),
+                "success",
+            )
+        else:
+            flash(result.get("message") or "فشلت مزامنة GPS.", "warning")
+        return redirect(url_for("gps"))
 
     @app.route("/gps", methods=["GET", "POST"])
     def gps():

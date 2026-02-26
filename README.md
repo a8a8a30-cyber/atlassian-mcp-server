@@ -52,6 +52,20 @@ designed for fast deployment and very low operating cost.
 
 The app creates a local SQLite database automatically on first run.
 
+### Link Flask app with GPS backend
+
+To enable full GPSDome integration in this Flask app, set:
+
+```bash
+export GPS_BACKEND_BASE_URL="http://127.0.0.1:8080"
+```
+
+Then the app will:
+
+- Sync contracts to Node GPS backend on start/close
+- Allow GPS live sync from the GPS page
+- Show per-contract GPS reports
+
 ## Deploy on Web (Render - Free Tier)
 
 Use the one-click button:

@@ -77,7 +77,9 @@ It is auto-applied on startup.
 - `POST /api/contracts`
 - `GET /api/contracts`
 - `GET /api/contracts/:contractId`
+- `GET /api/contracts/external/:externalContractId`
 - `PATCH /api/contracts/:contractId/close`
+- `PATCH /api/contracts/external/:externalContractId/close`
 - `GET /api/contracts/:contractId/alerts`
 - `POST /api/contracts/:contractId/alerts/run`
 
@@ -104,7 +106,10 @@ Example request:
 
 - `GET /api/reports/summary`
 - `GET /api/reports/contracts/:contractId`
+- `GET /api/reports/contracts/external/:externalContractId`
+- `GET /api/reports/live-positions`
 - `POST /api/reports/contracts/:contractId/distance`
+- `POST /api/reports/contracts/external/:externalContractId/distance`
 - `POST /api/reports/alerts/run`
 
 ## Cron jobs

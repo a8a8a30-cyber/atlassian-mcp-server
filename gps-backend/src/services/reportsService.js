@@ -47,6 +47,72 @@ class ReportsService {
     };
   }
 
+  async contractReportByExternalId(externalContractId) {
+    const contract = await this.contractsService.getContractByExternalId(
+      externalContractId
+    );
+    if (!contract) {
+      return null;
+    }
+    return this.contractReport(contract.id);
+  }
+
+  async latestPositions({ limit = 100 } = {}) {
+    const rows = await query(
+      `
+        SELECT
+          p.id,
+          p.external_device_id,
+          p.imei,
+          p.latitude,
+          p.longitude,
+          p.speed_kmh,
+          p.heading,
+          p.position_time,
+          d.name AS device_name,
+          c.id AS active_contract_id,
+          c.external_contract_id AS active_external_contract_id,
+          c.customer_name AS active_customer_name,
+          c.vehicle_plate AS active_vehicle_plate
+        FROM gps_positions p
+        INNER JOIN (
+          SELECT imei, MAX(position_time) AS max_time
+          FROM gps_positions
+          GROUP BY imei
+        ) latest
+          ON latest.imei = p.imei
+          AND latest.max_time = p.position_time
+        LEFT JOIN gps_devices d ON d.imei = p.imei
+        LEFT JOIN rental_contracts c
+          ON c.device_imei = p.imei
+          AND c.status = 'active'
+        ORDER BY p.position_time DESC
+        LIMIT :limit
+      `,
+      { limit: Number(limit) }
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      externalDeviceId: row.external_device_id,
+      imei: row.imei,
+      latitude: Number(row.latitude),
+      longitude: Number(row.longitude),
+      speedKmh: Number(row.speed_kmh),
+      heading: Number(row.heading || 0),
+      positionTime: row.position_time,
+      deviceName: row.device_name,
+      activeContract: row.active_contract_id
+        ? {
+            id: row.active_contract_id,
+            externalContractId: row.active_external_contract_id,
+            customerName: row.active_customer_name,
+            vehiclePlate: row.active_vehicle_plate,
+          }
+        : null,
+    }));
+  }
+
   async summary() {
     const [totals] = await query(
       `
