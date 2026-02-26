@@ -92,3 +92,17 @@ python -m unittest discover -s tests -v
 - Add branch transfer workflows and maintenance ticketing details
 - Add printable contract templates (Arabic/English)
 - Add PostgreSQL migration for long-term data durability
+
+## GPSDome Node Backend (new)
+
+For production GPS integration with Node.js + Express + MySQL, use:
+
+```text
+gps-backend/
+```
+
+See:
+
+```text
+gps-backend/README.md
+```
