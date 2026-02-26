@@ -142,6 +142,11 @@ class CarRentalMvpTestCase(unittest.TestCase):
             self.assertEqual(position.vehicle_id, self.vehicle_id)
             self.assertEqual(position.speed_kmh, 82.0)
 
+    def test_health_endpoint(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, {"status": "ok"})
+
 
 if __name__ == "__main__":
     unittest.main()

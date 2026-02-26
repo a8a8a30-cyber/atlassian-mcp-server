@@ -1,7 +1,7 @@
 # Car Rental Admin MVP (Low Cost)
 
-This repository now contains a lightweight internal car rental management system
-built for fast deployment and zero license cost.
+This repository contains a lightweight internal car rental management system
+designed for fast deployment and very low operating cost.
 
 ## Stack
 
@@ -22,7 +22,7 @@ built for fast deployment and zero license cost.
 
 ## Quick Start
 
-1. Create and activate a virtual environment:
+1. (Optional) Create and activate a virtual environment:
 
    ```bash
    python3 -m venv .venv
@@ -47,7 +47,34 @@ built for fast deployment and zero license cost.
    http://127.0.0.1:5000
    ```
 
-The app creates `car_rental.db` automatically on first run.
+The app creates a local SQLite database automatically on first run.
+
+## Deploy on Web (Render - Free Tier)
+
+Use the one-click button:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/a8a8a30-cyber/atlassian-mcp-server)
+
+Or deploy manually:
+
+1. Open https://render.com and sign in.
+2. Click **New +** -> **Blueprint**.
+3. Select this repository.
+4. Render will detect `render.yaml` automatically.
+5. Wait for build and open the generated public URL.
+
+Health check endpoint:
+
+```text
+/health
+```
+
+Notes:
+
+- Free tier services may sleep after inactivity.
+- SQLite storage on free web instances is not durable across full redeploys.
+- For production persistence, configure a managed PostgreSQL database and set
+  `DATABASE_URL`.
 
 ## Run Tests
 
@@ -61,4 +88,4 @@ python -m unittest discover -s tests -v
 - Integrate real GPS provider webhook/API instead of manual points
 - Add branch transfer workflows and maintenance ticketing details
 - Add printable contract templates (Arabic/English)
-- Deploy on low-cost VPS (Ubuntu + Gunicorn + Nginx)
+- Add PostgreSQL migration for long-term data durability

@@ -15,6 +15,22 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
+def resolve_database_uri(app: Flask, database_uri: str | None = None) -> str:
+    if database_uri:
+        return database_uri
+
+    env_database_url = os.getenv("DATABASE_URL")
+    if env_database_url:
+        # Some providers expose postgres:// while SQLAlchemy expects postgresql://
+        if env_database_url.startswith("postgres://"):
+            return env_database_url.replace("postgres://", "postgresql://", 1)
+        return env_database_url
+
+    os.makedirs(app.instance_path, exist_ok=True)
+    sqlite_path = os.path.join(app.instance_path, "car_rental.db")
+    return f"sqlite:///{sqlite_path}"
+
+
 class Branch(db.Model):
     __tablename__ = "branches"
 
@@ -127,10 +143,7 @@ def seed_initial_data():
 def create_app(database_uri=None, testing=False):
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_uri or os.getenv(
-        "DATABASE_URL",
-        "sqlite:////workspace/car_rental.db",
-    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = resolve_database_uri(app, database_uri)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["TESTING"] = testing
 
@@ -173,6 +186,10 @@ def create_app(database_uri=None, testing=False):
             upcoming_reservations=upcoming_reservations,
             latest_positions=latest_positions,
         )
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}, 200
 
     @app.route("/branches", methods=["GET", "POST"])
     def branches():
@@ -555,4 +572,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False)
