@@ -13,7 +13,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: GPS_BACKEND_BASE_URL
-        value: https://car-rental-gps-backend.onrender.com
+        sync: false
 
   - type: web
     name: car-rental-gps-backend

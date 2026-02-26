@@ -87,8 +87,10 @@ Or deploy manually:
    - `MYSQL_PASSWORD`
    - `GPSDOME_EMAIL`
    - `GPSDOME_PASSWORD`
-6. Redeploy both services after saving env vars.
-7. Open Flask URL and test:
+6. In **car-rental-admin** service, set:
+   - `GPS_BACKEND_BASE_URL=<your car-rental-gps-backend public URL>`
+7. Redeploy both services after saving env vars.
+8. Open Flask URL and test:
    - Start a contract with a vehicle that has IMEI in `GPS ID`
    - Open contract GPS report
    - Open GPS page and run "مزامنة الآن"
