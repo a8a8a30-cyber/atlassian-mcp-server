@@ -1250,6 +1250,23 @@ def create_app(database_uri=None, testing=False):
             flash(result.get("message") or "فشلت مزامنة GPS.", "warning")
         return redirect(url_for("gps"))
 
+    @app.post("/gps/test-backend")
+    def test_gps_backend_connection():
+        response = call_gps_backend(method="GET", path="/health")
+        if response.get("ok"):
+            payload = response.get("data") or {}
+            mysql_status = payload.get("mysql", "unknown")
+            flash(
+                f"اتصال GPS backend ناجح. حالة قاعدة البيانات: {mysql_status}.",
+                "success",
+            )
+        else:
+            flash(
+                f"فشل الاتصال مع GPS backend: {response.get('error')}",
+                "warning",
+            )
+        return redirect(url_for("gps"))
+
     @app.route("/gps", methods=["GET", "POST"])
     def gps():
         if request.method == "POST":

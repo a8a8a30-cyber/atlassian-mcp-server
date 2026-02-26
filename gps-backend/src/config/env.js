@@ -22,6 +22,7 @@ const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: asInt(process.env.PORT, 8080),
   enableCron: asBoolean(process.env.ENABLE_CRON, true),
+  strictDbStartup: asBoolean(process.env.STRICT_DB_STARTUP, false),
 
   mysql: {
     host: process.env.MYSQL_HOST || "127.0.0.1",
@@ -30,6 +31,7 @@ const env = {
     user: process.env.MYSQL_USER || "root",
     password: process.env.MYSQL_PASSWORD || "",
     connectionLimit: asInt(process.env.MYSQL_CONNECTION_LIMIT, 10),
+    connectTimeoutMs: asInt(process.env.MYSQL_CONNECT_TIMEOUT_MS, 5000),
   },
 
   gpsdome: {

@@ -31,6 +31,8 @@ services:
         value: production
       - key: ENABLE_CRON
         value: true
+      - key: STRICT_DB_STARTUP
+        value: false
       - key: MYSQL_HOST
         sync: false
       - key: MYSQL_PORT
@@ -43,6 +45,8 @@ services:
         sync: false
       - key: MYSQL_CONNECTION_LIMIT
         value: 10
+      - key: MYSQL_CONNECT_TIMEOUT_MS
+        value: 5000
       - key: GPSDOME_BASE_URL
         value: https://track.gpsdome.net
       - key: GPSDOME_SESSION_ENDPOINT

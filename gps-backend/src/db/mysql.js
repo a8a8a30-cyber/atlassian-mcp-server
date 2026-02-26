@@ -13,6 +13,7 @@ function getPool() {
       user: env.mysql.user,
       password: env.mysql.password,
       connectionLimit: env.mysql.connectionLimit,
+      connectTimeout: env.mysql.connectTimeoutMs,
       waitForConnections: true,
       queueLimit: 0,
       timezone: "Z",
@@ -43,8 +44,14 @@ async function transaction(handler) {
 }
 
 async function healthCheck() {
+  const timeoutMs = Math.max(2000, env.mysql.connectTimeoutMs);
   try {
-    const rows = await query("SELECT 1 AS ok");
+    const rows = await Promise.race([
+      query("SELECT 1 AS ok"),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("MySQL health check timeout")), timeoutMs)
+      ),
+    ]);
     return rows?.[0]?.ok === 1;
   } catch (error) {
     logger.error("MySQL health check failed", { error: error.message });

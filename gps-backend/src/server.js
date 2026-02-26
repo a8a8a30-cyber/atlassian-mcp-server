@@ -5,7 +5,17 @@ const { createApp } = require("./app");
 const { startScheduler } = require("./cron/scheduler");
 
 async function bootstrap() {
-  await initSchema();
+  try {
+    await initSchema();
+  } catch (error) {
+    logger.error("Failed to initialize schema at startup", { error: error.message });
+    if (env.strictDbStartup) {
+      throw error;
+    }
+    logger.warn(
+      "Continuing startup without schema initialization (STRICT_DB_STARTUP=false)"
+    );
+  }
 
   const { app, services } = createApp();
   const server = app.listen(env.port, () => {

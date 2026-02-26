@@ -63,6 +63,11 @@ Required env vars in Render:
 - `GPSDOME_EMAIL`
 - `GPSDOME_PASSWORD`
 
+Recommended startup settings:
+
+- `STRICT_DB_STARTUP=false` (service starts even if DB is temporarily unavailable)
+- `MYSQL_CONNECT_TIMEOUT_MS=5000`
+
 Optional defaults already in blueprint:
 
 - `GPSDOME_BASE_URL=https://track.gpsdome.net`

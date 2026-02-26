@@ -92,6 +92,7 @@ Or deploy manually:
 7. Redeploy both services after saving env vars.
 8. Open Flask URL and test:
    - Start a contract with a vehicle that has IMEI in `GPS ID`
+   - Open GPS page and click "اختبار الاتصال"
    - Open contract GPS report
    - Open GPS page and run "مزامنة الآن"
 
