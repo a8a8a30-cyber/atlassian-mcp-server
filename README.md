@@ -53,7 +53,7 @@ The app creates a local SQLite database automatically on first run.
 
 Use the one-click button:
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/a8a8a30-cyber/atlassian-mcp-server)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/a8a8a30-cyber/atlassian-mcp-server/tree/cursor%2F-bc-8b68025c-17d0-4110-b575-fabd34492e23-825c)
 
 Or deploy manually:
 
