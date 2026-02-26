@@ -109,6 +109,7 @@ Notes:
 - For production persistence, configure a managed PostgreSQL database and set
   `DATABASE_URL`.
 - GPS backend requires MySQL (external service or your own managed MySQL).
+- Flask web service is configured to bind `0.0.0.0:$PORT` in `render.yaml`.
 
 ## Run Tests
 
