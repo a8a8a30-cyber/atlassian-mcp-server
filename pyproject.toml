@@ -1,0 +1,24 @@
+[project]
+name = "atlassian-mcp-server"
+version = "0.1.0"
+description = "MCP server with Jira and Confluence tools."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "atlassian-mcp-server contributors" }
+]
+dependencies = [
+  "httpx>=0.28.1",
+  "mcp>=1.8.0"
+]
+
+[project.scripts]
+atlassian-mcp-server = "atlassian_mcp_server.__main__:main"
+
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["atlassian_mcp_server*"]
