@@ -77,8 +77,21 @@ Or deploy manually:
 1. Open https://render.com and sign in.
 2. Click **New +** -> **Blueprint**.
 3. Select this repository.
-4. Render will detect `render.yaml` automatically.
-5. Wait for build and open the generated public URL.
+4. Render will detect `render.yaml` automatically and create:
+   - `car-rental-admin` (Flask app)
+   - `car-rental-gps-backend` (Node GPS integration)
+5. Fill required environment values for **car-rental-gps-backend**:
+   - `MYSQL_HOST`
+   - `MYSQL_DATABASE`
+   - `MYSQL_USER`
+   - `MYSQL_PASSWORD`
+   - `GPSDOME_EMAIL`
+   - `GPSDOME_PASSWORD`
+6. Redeploy both services after saving env vars.
+7. Open Flask URL and test:
+   - Start a contract with a vehicle that has IMEI in `GPS ID`
+   - Open contract GPS report
+   - Open GPS page and run "مزامنة الآن"
 
 Health check endpoint:
 
@@ -92,6 +105,7 @@ Notes:
 - SQLite storage on free web instances is not durable across full redeploys.
 - For production persistence, configure a managed PostgreSQL database and set
   `DATABASE_URL`.
+- GPS backend requires MySQL (external service or your own managed MySQL).
 
 ## Run Tests
 

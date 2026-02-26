@@ -12,3 +12,60 @@ services:
         value: 3.12.3
       - key: SECRET_KEY
         generateValue: true
+      - key: GPS_BACKEND_BASE_URL
+        value: https://car-rental-gps-backend.onrender.com
+
+  - type: web
+    name: car-rental-gps-backend
+    env: node
+    rootDir: gps-backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.21.1
+      - key: NODE_ENV
+        value: production
+      - key: ENABLE_CRON
+        value: true
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: 3306
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_CONNECTION_LIMIT
+        value: 10
+      - key: GPSDOME_BASE_URL
+        value: https://track.gpsdome.net
+      - key: GPSDOME_SESSION_ENDPOINT
+        value: /api/session
+      - key: GPSDOME_DEVICES_ENDPOINT
+        value: /api/devices
+      - key: GPSDOME_POSITIONS_ENDPOINT
+        value: /api/positions
+      - key: GPSDOME_REPORTS_SUMMARY_ENDPOINT
+        value: /api/reports/summary
+      - key: GPSDOME_EMAIL
+        sync: false
+      - key: GPSDOME_PASSWORD
+        sync: false
+      - key: GPSDOME_USE_BASIC_AUTH
+        value: false
+      - key: GPSDOME_REQUEST_TIMEOUT_MS
+        value: 20000
+      - key: GPS_SYNC_CRON
+        value: "*/2 * * * *"
+      - key: GPS_ALERT_CRON
+        value: "*/3 * * * *"
+      - key: DEFAULT_SPEED_LIMIT_KMH
+        value: 120
+      - key: DEFAULT_DISTANCE_LIMIT_KM
+        value: 500

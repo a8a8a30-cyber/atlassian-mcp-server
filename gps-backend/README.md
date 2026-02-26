@@ -47,6 +47,30 @@ Dev mode:
 npm run dev
 ```
 
+## Deploy on Render
+
+This repo root `render.yaml` already includes this service with:
+
+- service name: `car-rental-gps-backend`
+- root directory: `gps-backend`
+
+Required env vars in Render:
+
+- `MYSQL_HOST`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `GPSDOME_EMAIL`
+- `GPSDOME_PASSWORD`
+
+Optional defaults already in blueprint:
+
+- `GPSDOME_BASE_URL=https://track.gpsdome.net`
+- `GPSDOME_SESSION_ENDPOINT=/api/session`
+- `GPSDOME_DEVICES_ENDPOINT=/api/devices`
+- `GPSDOME_POSITIONS_ENDPOINT=/api/positions`
+- `GPSDOME_REPORTS_SUMMARY_ENDPOINT=/api/reports/summary`
+
 ## Database schema
 
 Schema is in:
