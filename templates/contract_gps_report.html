@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}تقرير GPS العقد #{{ contract.id }}{% endblock %}
+{% block page_title %}تقرير GPS للعقد #{{ contract.id }}{% endblock %}
+{% block page_subtitle %}متابعة المسافة والسرعة والتنبيهات المرتبطة بالعقد{% endblock %}
+{% block page_actions %}
+<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('contracts') }}">رجوع إلى العقود</a>
+{% endblock %}
+{% block content %}
+<div class="card app-card mb-3">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="text-muted small">العقد المحلي</div>
+        <div class="fw-bold">#{{ contract.id }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-muted small">المركبة</div>
+        <div class="fw-bold">{{ contract.vehicle.plate_number }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-muted small">IMEI</div>
+        <div class="fw-bold">{{ contract.vehicle.gps_identifier or "-" }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-muted small">المعرف الخارجي</div>
+        <div class="fw-bold">{{ external_contract_id }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if integration_error %}
+<div class="alert alert-warning">
+  {{ integration_error }}
+</div>
+{% endif %}
+
+{% if report %}
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">المسافة المقطوعة</div>
+        <div class="value">{{ "%.2f"|format(report.distance.distanceKm or 0) }} كم</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">حد المسافة</div>
+        <div class="value">{{ "%.2f"|format(report.contract.distanceLimitKm or 0) }} كم</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">أقصى سرعة</div>
+        <div class="value">{{ "%.1f"|format(report.metrics.maxSpeedKmh or 0) }} كم/س</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="label">التنبيهات</div>
+        <div class="value">{{ report.alerts|length }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card app-card h-100">
+      <div class="card-header">آخر موقع مباشر</div>
+      <div class="card-body">
+        {% if report.latestPosition %}
+        <div class="mb-2"><strong>الموقع:</strong> {{ report.latestPosition.latitude }}, {{ report.latestPosition.longitude }}</div>
+        <div class="mb-2"><strong>السرعة:</strong> {{ "%.1f"|format(report.latestPosition.speed_kmh or 0) }} كم/س</div>
+        <div class="mb-2"><strong>الوقت:</strong> {{ report.latestPosition.position_time }}</div>
+        {% else %}
+        <div class="text-muted">لا توجد بيانات موقع للعقد حتى الآن.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card app-card h-100">
+      <div class="card-header">آخر التنبيهات</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th>الرسالة</th>
+                <th>القيمة</th>
+                <th>الوقت</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alert in report.alerts[:10] %}
+              <tr>
+                <td>{{ alert.alert_type }}</td>
+                <td>{{ alert.message }}</td>
+                <td>{{ alert.actual_value }}</td>
+                <td>{{ alert.created_at }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">لا توجد تنبيهات مسجلة.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card app-card mt-3">
+  <div class="card-header">المسار الزمني للنقاط (آخر {{ report.timeline|length }} نقطة)</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الإحداثيات</th>
+            <th>السرعة</th>
+            <th>الوقت</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report.timeline[:150] %}
+          <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.latitude }}, {{ row.longitude }}</td>
+            <td>{{ "%.1f"|format(row.speedKmh or 0) }} كم/س</td>
+            <td>{{ row.at }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-3">لا توجد نقاط مسار متاحة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

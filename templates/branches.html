@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}الفروع | إدارة التأجير{% endblock %}
+{% block page_title %}إدارة الفروع{% endblock %}
+{% block page_subtitle %}إضافة الفروع وربطها بمدن التشغيل{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card app-card">
+      <div class="card-header">إضافة فرع جديد</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">اسم الفرع</label>
+            <input class="form-control" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">المدينة</label>
+            <input class="form-control" name="city" required>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">حفظ الفرع</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card app-card">
+      <div class="card-header">قائمة الفروع</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped mb-0">
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>اسم الفرع</th>
+                <th>المدينة</th>
+                <th>تاريخ الإنشاء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for branch in branches %}
+              <tr>
+                <td>{{ branch.id }}</td>
+                <td>{{ branch.name }}</td>
+                <td>{{ branch.city }}</td>
+                <td>{{ branch.created_at.strftime("%Y-%m-%d") }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">لا توجد فروع مضافة حتى الآن.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

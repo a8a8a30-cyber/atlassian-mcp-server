@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}الحجوزات | إدارة التأجير{% endblock %}
+{% block page_title %}إدارة الحجوزات{% endblock %}
+{% block page_subtitle %}إنشاء الحجوزات ومتابعة حالتها لكل فرع{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-4">
+    <div class="card app-card">
+      <div class="card-header">إنشاء حجز</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-2">
+            <label class="form-label">اسم العميل</label>
+            <input class="form-control" name="customer_name" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">هاتف العميل</label>
+            <input class="form-control" name="customer_phone" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">المركبة</label>
+            <select class="form-select" name="vehicle_id" required>
+              {% for vehicle in vehicles %}
+              <option value="{{ vehicle.id }}">
+                {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.daily_rate | sar }} / يوم)
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">فرع الاستلام</label>
+            <select class="form-select" name="pickup_branch_id" required>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.city }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">فرع التسليم</label>
+            <select class="form-select" name="dropoff_branch_id" required>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.city }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">تاريخ البداية</label>
+              <input class="form-control" type="date" name="start_date" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label">تاريخ النهاية</label>
+              <input class="form-control" type="date" name="end_date" required>
+            </div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label">ملاحظات (اختياري)</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+          <button class="btn btn-primary w-100 mt-3" type="submit">حفظ الحجز</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <div class="card app-card">
+      <div class="card-header">قائمة الحجوزات</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>العميل</th>
+                <th>المركبة</th>
+                <th>الفترة</th>
+                <th>الفروع</th>
+                <th>الإجمالي</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reservation in reservations %}
+              <tr>
+                <td>#{{ reservation.id }}</td>
+                <td>
+                  {{ reservation.customer_name }}<br>
+                  <small class="text-muted">{{ reservation.customer_phone }}</small>
+                </td>
+                <td>{{ reservation.vehicle.plate_number }}</td>
+                <td>{{ reservation.start_date }} -> {{ reservation.end_date }}</td>
+                <td>{{ reservation.pickup_branch.name }} -> {{ reservation.dropoff_branch.name }}</td>
+                <td>{{ reservation.total_price | sar }}</td>
+                <td><span class="badge {{ status_badge(reservation.status) }}">{{ status_label(reservation.status) }}</span></td>
+                <td>
+                  {% if reservation.status not in ["completed", "cancelled", "active"] %}
+                  <form method="post" action="{{ url_for('cancel_reservation', reservation_id=reservation.id) }}">
+                    <button class="btn btn-sm btn-outline-danger">إلغاء</button>
+                  </form>
+                  {% else %}
+                  <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-center text-muted py-3">لا توجد حجوزات حتى الآن.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

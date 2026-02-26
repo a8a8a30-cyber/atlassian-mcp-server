@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}العقود | إدارة التأجير{% endblock %}
+{% block page_title %}إدارة العقود{% endblock %}
+{% block page_subtitle %}بدء العقود من الحجوزات المؤكدة وإغلاقها عند الاستلام{% endblock %}
+{% block content %}
+{% if gps_backend_enabled %}
+<div class="alert alert-info">
+  ربط GPSDome مفعل. يتم مزامنة العقد تلقائيًا عند البدء والإغلاق إذا كانت المركبة تحتوي على IMEI في حقل GPS ID.
+</div>
+{% else %}
+<div class="alert alert-warning">
+  ربط GPSDome غير مفعل. أضف متغير البيئة <code>GPS_BACKEND_BASE_URL</code> لتشغيل التكامل.
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-xl-4">
+    <div class="card app-card">
+      <div class="card-header">بدء عقد جديد</div>
+      <div class="card-body">
+        {% if reservations %}
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">الحجز</label>
+            <select class="form-select" name="reservation_id" required>
+              {% for reservation in reservations %}
+              <option value="{{ reservation.id }}">
+                #{{ reservation.id }} - {{ reservation.customer_name }} - {{ reservation.vehicle.plate_number }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">عداد البداية</label>
+            <input class="form-control" type="number" min="0" name="start_odometer" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">نسبة الوقود عند التسليم (%)</label>
+            <input class="form-control" type="number" min="0" max="100" value="100" name="fuel_out" required>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">بدء العقد</button>
+        </form>
+        {% else %}
+        <div class="empty-state">
+          لا توجد حجوزات مؤكدة حالياً. ابدأ أولاً بإضافة حجز من شاشة
+          <a href="{{ url_for('reservations') }}">الحجوزات</a>.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <div class="card app-card">
+      <div class="card-header">سجل العقود</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>الحجز</th>
+                <th>المركبة</th>
+                <th>تاريخ البداية</th>
+                <th>العداد</th>
+                <th>الحالة</th>
+                <th>تقرير GPS</th>
+                <th>إغلاق العقد</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for contract in contracts %}
+              <tr>
+                <td>#{{ contract.id }}</td>
+                <td>#{{ contract.reservation_id }}</td>
+                <td>{{ contract.vehicle.plate_number }}</td>
+                <td>{{ contract.start_datetime.strftime("%Y-%m-%d %H:%M") }}</td>
+                <td>{{ contract.start_odometer }}{% if contract.end_odometer is not none %} -> {{ contract.end_odometer }}{% endif %}</td>
+                <td>
+                  <span class="badge {{ status_badge(contract.status) }}">
+                    {{ status_label(contract.status) }}
+                  </span>
+                </td>
+                <td>
+                  {% if gps_backend_enabled and contract.vehicle.gps_identifier %}
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('contract_gps_report', contract_id=contract.id) }}">
+                    عرض التقرير
+                  </a>
+                  <div class="small text-muted mt-1">{{ contract.vehicle.gps_identifier }}</div>
+                  {% elif not contract.vehicle.gps_identifier %}
+                  <span class="text-muted">لا يوجد IMEI</span>
+                  {% else %}
+                  <span class="text-muted">غير مفعل</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if contract.status == "active" %}
+                  <form method="post" action="{{ url_for('close_contract', contract_id=contract.id) }}" class="d-flex flex-column gap-1">
+                    <input class="form-control form-control-sm" type="number" min="{{ contract.start_odometer }}" name="end_odometer" placeholder="عداد الإغلاق" required>
+                    <input class="form-control form-control-sm" type="number" min="0" max="100" name="fuel_in" value="100" required>
+                    <input class="form-control form-control-sm" type="text" name="close_notes" placeholder="ملاحظات الإغلاق">
+                    <button class="btn btn-sm btn-outline-primary">إغلاق</button>
+                  </form>
+                  {% else %}
+                  <span class="text-muted">تم الإغلاق</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-center text-muted py-3">لا توجد عقود بعد.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

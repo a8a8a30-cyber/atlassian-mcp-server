@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+car_rental.db
+instance/
+.pytest_cache/
