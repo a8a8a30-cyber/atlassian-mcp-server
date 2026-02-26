@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">Create Reservation</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-2">
+            <label class="form-label">Customer name</label>
+            <input class="form-control" name="customer_name" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Customer phone</label>
+            <input class="form-control" name="customer_phone" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Vehicle</label>
+            <select class="form-select" name="vehicle_id" required>
+              {% for vehicle in vehicles %}
+              <option value="{{ vehicle.id }}">
+                {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }} ({{ "%.2f"|format(vehicle.daily_rate) }} SAR/day)
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Pickup branch</label>
+            <select class="form-select" name="pickup_branch_id" required>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.city }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Dropoff branch</label>
+            <select class="form-select" name="dropoff_branch_id" required>
+              {% for branch in branches %}
+              <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.city }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">Start date</label>
+              <input class="form-control" type="date" name="start_date" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label">End date</label>
+              <input class="form-control" type="date" name="end_date" required>
+            </div>
+          </div>
+          <div class="mt-2">
+            <label class="form-label">Notes (optional)</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+          <button class="btn btn-primary w-100 mt-3" type="submit">Create reservation</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">Reservations</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Period</th>
+                <th>Branches</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reservation in reservations %}
+              <tr>
+                <td>#{{ reservation.id }}</td>
+                <td>
+                  {{ reservation.customer_name }}<br>
+                  <small class="text-muted">{{ reservation.customer_phone }}</small>
+                </td>
+                <td>{{ reservation.vehicle.plate_number }}</td>
+                <td>{{ reservation.start_date }} -> {{ reservation.end_date }}</td>
+                <td>{{ reservation.pickup_branch.name }} -> {{ reservation.dropoff_branch.name }}</td>
+                <td>{{ "%.2f"|format(reservation.total_price) }} SAR</td>
+                <td><span class="badge text-bg-secondary">{{ reservation.status }}</span></td>
+                <td>
+                  {% if reservation.status not in ["completed", "cancelled", "active"] %}
+                  <form method="post" action="{{ url_for('cancel_reservation', reservation_id=reservation.id) }}">
+                    <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                  </form>
+                  {% else %}
+                  <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-center text-muted py-3">No reservations yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Car Rental Operations Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-2">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Branches</div>
+        <div class="h4 mb-0">{{ totals.branches }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Vehicles</div>
+        <div class="h4 mb-0">{{ totals.vehicles }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Available</div>
+        <div class="h4 mb-0">{{ totals.available_vehicles }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Active Contracts</div>
+        <div class="h4 mb-0">{{ totals.active_contracts }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Open Reservations</div>
+        <div class="h4 mb-0">{{ totals.open_reservations }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        Upcoming Reservations
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
+                <th>Branch</th>
+                <th>Period</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reservation in upcoming_reservations %}
+              <tr>
+                <td>#{{ reservation.id }}</td>
+                <td>{{ reservation.customer_name }}</td>
+                <td>{{ reservation.vehicle.plate_number }}</td>
+                <td>{{ reservation.pickup_branch.name }}</td>
+                <td>{{ reservation.start_date }} -> {{ reservation.end_date }}</td>
+                <td><span class="badge text-bg-secondary">{{ reservation.status }}</span></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="text-center text-muted py-3">No reservations yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        Latest GPS Updates
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Location</th>
+                <th>Speed</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for position in latest_positions %}
+              <tr>
+                <td>{{ position.vehicle.plate_number }}</td>
+                <td>{{ position.latitude }}, {{ position.longitude }}</td>
+                <td>{{ "%.0f"|format(position.speed_kmh) }} km/h</td>
+                <td>{{ position.recorded_at.strftime("%Y-%m-%d %H:%M") }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No GPS data yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
